@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+opencv-python>=4.8
+numpy>=1.24
+google-genai>=1.0
+tensorflow>=2.15
+# only needed for the old desktop version (app.py)
+mediapipe>=0.10.14

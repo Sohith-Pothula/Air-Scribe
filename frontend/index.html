@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AirScribe — Write in the air with your finger</title>
+  <meta name="description" content="AirScribe turns your webcam into a pen. Write words in the air with your index finger and get the word and its meaning instantly." />
+  <meta name="theme-color" content="#0a0a0b" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230a0a0b'/><path d='M8 22c4-10 7-12 9-6s4 4 7-6' stroke='%23ff5a45' stroke-width='3' fill='none' stroke-linecap='round'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a href="#" class="brand" id="brand-link" aria-label="AirScribe home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 22c4-10 7-12 9-6s4 4 8-7" /></svg>
+      AirScribe
+    </a>
+    <nav class="nav">
+      <a href="#how" id="nav-how">How it works</a>
+      <span class="status" id="server-status"><i></i><span>Connecting…</span></span>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Write in the air.<br /><span>Read it back instantly.</span></h1>
+      <p>Raise one finger to draw, two to lift the pen, and open your palm to read the word.</p>
+    </section>
+
+    <section class="workspace" aria-label="Drawing workspace">
+      <!-- Camera stage -->
+      <div class="stage" id="stage">
+        <video id="video" playsinline muted></video>
+        <canvas id="ink" aria-label="Drawing canvas"></canvas>
+
+        <div class="stage-hud">
+          <span class="chip" id="mode-chip" data-mode="IDLE"><i></i><b id="mode-label">Mouse</b></span>
+          <div class="palm-bar" id="palm-bar"><span></span></div>
+        </div>
+
+        <div class="stage-overlay" id="overlay">
+          <div class="overlay-card">
+            <div class="overlay-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 10l4.55-2.28A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.9L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            </div>
+            <button class="btn btn-primary" id="start-camera">Start camera</button>
+            <p class="muted" id="overlay-note">Video stays on your device. Only the drawing is sent for reading.</p>
+            <button class="link" id="use-mouse">or draw with your mouse</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side panel -->
+      <aside class="panel">
+        <div class="segmented" role="tablist" aria-label="Recognition mode">
+          <button role="tab" id="mode-word" class="active" data-value="word" aria-selected="true">Word</button>
+          <button role="tab" id="mode-digit" data-value="digit" aria-selected="false">Digit</button>
+          <span class="seg-thumb"></span>
+        </div>
+
+        <div class="result" id="result" aria-live="polite">
+          <span class="eyebrow">Result</span>
+          <h2 class="result-word" id="result-word">—</h2>
+          <p class="result-meaning" id="result-meaning">Write something, then open your palm or press <kbd>P</kbd>.</p>
+          <span class="result-engine" id="result-engine"></span>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-predict"><span>Read it</span><kbd>P</kbd></button>
+          <div class="actions-row">
+            <button class="btn" id="btn-undo">Undo <kbd>Z</kbd></button>
+            <button class="btn" id="btn-clear">Clear <kbd>C</kbd></button>
+          </div>
+        </div>
+
+        <div class="recent">
+          <span class="eyebrow">Recent</span>
+          <ul id="recent-list"><li class="muted empty">Nothing yet</li></ul>
+        </div>
+      </aside>
+    </section>
+
+    <!-- How it works -->
+    <section class="how" id="how">
+      <h2>How it works</h2>
+      <p class="section-sub">Hand tracking runs entirely in your browser. The server only sees a small black-and-white image of your strokes.</p>
+
+      <ol class="steps">
+        <li>
+          <span class="step-num">01</span>
+          <h3>Track</h3>
+          <p>MediaPipe finds 21 points on your hand every frame, right in the browser using WebAssembly.</p>
+        </li>
+        <li>
+          <span class="step-num">02</span>
+          <h3>Gesture</h3>
+          <p>Each finger counts as "up" when its tip is farther from the wrist than its middle joint. The combination picks the mode.</p>
+        </li>
+        <li>
+          <span class="step-num">03</span>
+          <h3>Draw</h3>
+          <p>Your fingertip is smoothed and debounced, then drawn as curves so lines stay clean even with shaky hands.</p>
+        </li>
+        <li>
+          <span class="step-num">04</span>
+          <h3>Read</h3>
+          <p>The strokes go to the FastAPI backend. Gemini reads the word and its meaning, or an offline CNN reads a digit.</p>
+        </li>
+      </ol>
+
+      <div class="gestures">
+        <div class="gesture"><span class="g-icon">☝️</span><div><b>Index finger</b><p>Draw</p></div></div>
+        <div class="gesture"><span class="g-icon">✌️</span><div><b>Index + middle</b><p>Move without drawing</p></div></div>
+        <div class="gesture"><span class="g-icon">🖐️</span><div><b>Open palm, 1 sec</b><p>Read the word</p></div></div>
+      </div>
+
+      <div class="flow" aria-label="Architecture">
+        <div class="flow-node"><b>Browser</b><span>Camera · MediaPipe · Canvas</span></div>
+        <div class="flow-arrow" aria-hidden="true"></div>
+        <div class="flow-node"><b>FastAPI</b><span>POST /api/predict</span></div>
+        <div class="flow-arrow" aria-hidden="true"></div>
+        <div class="flow-node"><b>Model</b><span>Gemini · or · MNIST CNN</span></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>AirScribe</span>
+    <span class="muted">Tip: good lighting and a plain background help tracking.</span>
+  </footer>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
