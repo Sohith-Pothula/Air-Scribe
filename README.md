@@ -1,3 +1,13 @@
+---
+title: AirScribe
+emoji: ✍️
+colorFrom: red
+colorTo: gray
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # AirScribe
 
 Write words in the air with your index finger, in your browser, and get the word and its meaning back.
